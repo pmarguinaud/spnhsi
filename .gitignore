@@ -6,4 +6,5 @@
 *.x
 *.smod
 *.a
-
+*.intfb.h
+Makefile
