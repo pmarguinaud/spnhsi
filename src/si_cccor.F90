@@ -1,5 +1,7 @@
 SUBROUTINE SI_CCCOR (YDCST, YDGEOMETRY, YDDYN, YDDYNA, KLON, KLEV, KIDIA, KFDIA, PIN, POU, POU2)
 
+!$ACDC singleblock
+
 !**** *SI_CCCOR* - Semi-implicit scheme in the NH model.
 !                  Does a multiplication by C**2 * COR when the constraint
 !                  C1 is not matched.
@@ -139,17 +141,36 @@ ASSOCIATE(RD=>YDCST%RD, RCPD=>YDCST%RCPD,RCVD=>YDCST%RCVD, &
 
 ! * Computes ZTAU = Cp_dry * Tau * PIN and ZNU = Nu * PIN
 CALL SITNU(YDCST,YDGEOMETRY,YDDYN,KLON,KLEV,KIDIA,KFDIA,PIN,ZTAU,ZNU)
+
+!$ACDC PARALLEL {
+
 ZTAU(:,:)=ZTAU(:,:)*RCPD
 
+!$ACDC }
+
 ! * Computes ZGAM = Gamma * PIN
+
+!$ACDC PARALLEL {
+
 ZSP(1:KLON)=0.0_JPRB
+
+!$ACDC }
+
 CALL SIGAM(YDCST,YDGEOMETRY,YDDYN,KLON,KLEV,KIDIA,KFDIA,ZGAM,PIN,ZSP)
 
 ! * Computes ZGAMTAU = Cp_dry * Gamma * (Tau * PIN) = Gamma * ZTAU
+
+!$ACDC PARALLEL {
+
 ZSP(:)=0.0_JPRB
+
+!$ACDC }
+
 CALL SIGAM(YDCST,YDGEOMETRY,YDDYN,KLON,KLEV,KIDIA,KFDIA,ZGAMTAU,ZTAU,ZSP)
 
 ZFAC = 1.0_JPRB + YDGEOMETRY%YRVERT_GEOM%YRCVER%RFAC1
+
+!$ACDC PARALLEL {
 
 ! * Computes POU:
 DO JLEV=1,KLEV
@@ -159,6 +180,8 @@ DO JLEV=1,KLEV
   ENDDO
 ENDDO
 
+!$ACDC }
+
 !      ----------------------------------------------------------------
 
 !*       2.    COMPUTE POU2
@@ -166,9 +189,16 @@ ENDDO
 
 IF (PRESENT(POU2)) THEN
 
+!$ACDC PARALLEL {
+
   ! * Computes ZTAUGAM = Tau * ZGAM
   ZSP(:)=0.0_JPRB
+
+!$ACDC }
+
   CALL SITNU(YDCST,YDGEOMETRY,YDDYN,KLON,KLEV,KIDIA,KFDIA,ZGAM,ZTAUGAM,ZSP)
+
+!$ACDC PARALLEL {
 
   ! * Computes (g**2/(N**2 C**2)) A2 * PIN:
   DO JLEV=1,KLEV
@@ -177,6 +207,8 @@ IF (PRESENT(POU2)) THEN
        & -ZTAU(JLON,JLEV)-SITR*ZGAM(JLON,JLEV))*RCPD/(RD*RD*SITR)
     ENDDO
   ENDDO
+
+!$ACDC }
 
   ! * Apply the tridiagonal operator Lv* to get POU2
   CALL SISEVE(YDCST,YDGEOMETRY,YDDYN,YDDYNA,KLON,KLEV,KIDIA,KFDIA,ZAUX,POU2)

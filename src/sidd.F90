@@ -1,5 +1,7 @@
 SUBROUTINE SIDD (YDCST,YDGEOMETRY, YDDYN, YDDYNA, KLON, KLEV, KIDIA, KFDIA, PDH, PDV, PRNH, PT, PSP)
 
+!$ACDC singleblock --openmptoparallel
+
 !**** * SIDD*    - Provide 3D divergence increment in semi-implicit
 !                          scheme for the case of nonhydrostatic dynamics
 

@@ -11,3 +11,5 @@ module load gcc/9.2.0          2>/dev/null
 
 
 export PATH=/home/gmap/mrpm/marguina/fxtran-acdc/manyblocks/bin:$PATH
+
+ulimit -s unlimited

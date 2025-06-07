@@ -263,6 +263,9 @@ ENDIF
 !              ----------------
 
 IF (LIMPF) THEN
+
+!$ACDC ABORT {
+
 !$OMP PARALLEL DO SCHEDULE(STATIC) PRIVATE(JSP,JLEV)
   DO JLEV=1,NFLEVG
     DO JSP=KSTA,KEND
@@ -270,7 +273,11 @@ IF (LIMPF) THEN
     ENDDO
   ENDDO
 !$OMP END PARALLEL DO
+
+!$ACDC }
+
 ENDIF
+
 !$OMP PARALLEL DO SCHEDULE(STATIC) PRIVATE(JSP,JLEV)
 DO JLEV=1,NFLEVG
   DO JSP=KSTA,KEND
@@ -279,12 +286,18 @@ DO JLEV=1,NFLEVG
   ENDDO
 ENDDO
 !$OMP END PARALLEL DO
+
 DO JSP=KSTA,KEND
-    ZZSPSPG (JSP)=PSPSPG (JSP)
+  ZZSPSPG (JSP)=PSPSPG (JSP)
 ENDDO
+
 IF (LRSIDDH) THEN
   ! DDH memory transfer
+
   IF (LIMPF) THEN
+
+!$ACDC ABORT {
+
 !$OMP PARALLEL DO SCHEDULE(STATIC) PRIVATE(JSP,JLEV)
     DO JLEV=1,NFLEVG
       DO JSP=KSTA,KEND
@@ -292,7 +305,11 @@ IF (LRSIDDH) THEN
       ENDDO
     ENDDO
 !$OMP END PARALLEL DO
+
+!$ACDC }
+
   ENDIF
+
 !$OMP PARALLEL DO SCHEDULE(STATIC) PRIVATE(JSP,JLEV)
   DO JLEV=1,NFLEVG
     DO JSP=KSTA,KEND
@@ -333,6 +350,9 @@ IF (LSIDG) THEN
 ENDIF
 
 IF (LESIDG) THEN
+
+!$ACDC ABORT {
+
   ! ky: incorrect use of NSE0L; use the ALADIN counterpart NESE0L instead.
   !     (its set-up and allocation remain to be coded).
   !  IS0=YDLAP%NSE0L(KMLOC)
@@ -352,6 +372,8 @@ IF (LESIDG) THEN
   ENDDO
   !$OMP END PARALLEL DO
 
+!$ACDC }
+
 ENDIF
 
 ! ky: if LESIDG, missing there the norther shift to have C+I and C+I+E
@@ -361,6 +383,9 @@ ENDIF
 !              (identical to the part 2.2 of SPCSI).
 
 IF (LIMPF) THEN
+
+!$ACDC ABORT {
+
   ZEM=REAL(KM,JPRB)
   ZAL=2.0_JPRB*ZBDT*YDCST%ROMEGA*ZEM
   ILO=KM
@@ -394,6 +419,9 @@ IF (LIMPF) THEN
   ZFMINUS(NSMAX)=ZF*(ZEN+1.0_JPRB)*ZEPSI(NSMAX)/ZEN
   ZFPLUS(NSMAX+1)=0.0_JPRB
   ZFMINUS(NSMAX+1)=0.0_JPRB
+
+!$ACDC }
+
 ENDIF
 
 DO JITER=0,I_NITERHELM
@@ -438,6 +466,9 @@ DO JITER=0,I_NITERHELM
   ! * Provides Dprim_star_star_star (in ZSDIV) from Dprim_star_star (in ZSDIV)
   !   (the quantity added is the same one as in the end of part 2.3 of SPCSI).
   IF (LIMPF) THEN
+
+!$ACDC ABORT {
+
     IF (JITER == 0) THEN
 
       IF (KM > 0) THEN
@@ -494,6 +525,9 @@ DO JITER=0,I_NITERHELM
 !$OMP END PARALLEL DO
 
     ENDIF
+
+!$ACDC }
+
   ENDIF
 
   ! * Provides Dprim_star_star (resp. Dprim_star_star_star) in ZR1D and
@@ -527,6 +561,8 @@ DO JITER=0,I_NITERHELM
 
   IF (LSIDG .OR. LESIDG) THEN
 
+!$ACDC ABORT {
+
   CALL SPCSIDG_PART2(YDGEOMETRY,KSTA,KEND,ZR1D,ZR1D2,&
     &KM,KMLOC,LSIDG,KSZNISNAX,NISNAX,SCGMAP(:,1),SCGMAP(:,2),SCGMAP(:,3))
 
@@ -537,6 +573,8 @@ DO JITER=0,I_NITERHELM
       ENDDO
     ENDDO
 !$OMP END PARALLEL DO
+
+!$ACDC }
 
   ENDIF
   ! * Provides "LLstar Dprim_star_star" if LIMPF=F, or
@@ -580,11 +618,23 @@ DO JITER=0,I_NITERHELM
       ENDDO
 !$OMP END PARALLEL DO
     IF (LSIDG) THEN 
+
+!$ACDC ABORT {
+
       CALL SPCSIDG_PART2(YDGEOMETRY,KSTA,KEND,ZR3D,ZR4D,&
     &KM,KMLOC,LSIDG,KSZNISNAX,NISNAX,SCGMAP(:,1),SCGMAP(:,2),SCGMAP(:,3))
+
+!$ACDC }
+
     ELSEIF (LESIDG) THEN
+
+!$ACDC ABORT {
+
       CALL SPCSIDG_PART2(YDGEOMETRY,KSTA,KEND,ZR3D,ZR4D,&
     &KM,KMLOC,LSIDG,KSZNISNAX,NISNAX,ZPD,ZPE,ZPF)
+
+!$ACDC }
+
     ENDIF
 
 !$OMP PARALLEL DO SCHEDULE(STATIC) PRIVATE(JSP,JLEV)
@@ -645,6 +695,9 @@ DO JITER=0,I_NITERHELM
   !   Dcha_star_star(m,n-2), Dcha_star_star(m,n+2) in the RHS.
 
   IF (LIMPF .AND. (JITER == 0)) THEN
+
+!$ACDC ABORT {
+
     CALL SI_MXPTCO(KM,NSMAX,NFLEVG,NFLEVG,ZF,ZALPHA(KM),&
      & ZDENIM(KM),ZEPSI(KM),ZR2D,ZSRHS2_INC)
 !$OMP PARALLEL DO SCHEDULE(STATIC) PRIVATE(JSP,JLEV)
@@ -655,6 +708,9 @@ DO JITER=0,I_NITERHELM
         ENDDO
       ENDDO
 !$OMP END PARALLEL DO
+
+!$ACDC }
+
   ENDIF
 
   ! * Multiply by array SIFACI to obtain the RHS of the Helmholtz eqn,
@@ -674,6 +730,9 @@ DO JITER=0,I_NITERHELM
   ! Inversion of Helmholtz equation itself.
 
   IF (LSIDG .OR. LESIDG) THEN
+
+!$ACDC ABORT {
+
     ! Case designed for stretching :
     ! Use ZSDIVPL and ZSPDIVPL as intermediate work arrays.
 
@@ -683,14 +742,22 @@ DO JITER=0,I_NITERHELM
   CALL SPCSIDG_PART0NH(YDGEOMETRY,YDDYN,KSTA,KEND,ZSPDIVP,&
    & PLAPIN,KM,IOFF)
 
+!$ACDC }
+
   ELSE
     ! Case designed when no stretching :
 
     IF (LIMPF) THEN
+
+!$ACDC ABORT {
+
       ! Solve complex pentadiagonal system
       CALL SIMPLICO(KM,NSMAX,NFLEVG,NFLEVG,ZALPHA(KM),&
        & ZDENIM(KM),ZFPLUS(KM),ZFMINUS(KM),SIVP,YDLAP%RLAPDI(0:NSMAX),&
        & ZBDT2,ZSDIVP,ZSPDIVP)
+
+!$ACDC }
+
     ELSE
       ! Inversion of a diagonal matrix, provides Q*dver(t+dt).
 !$OMP PARALLEL DO SCHEDULE(STATIC) PRIVATE(JSP,JLEV)
@@ -739,6 +806,8 @@ DO JITER=0,I_NITERHELM
   ! * Provides D'(t+dt).
   IF (LSIDG .OR. LESIDG) THEN
 
+!$ACDC ABORT {
+
     ! * Divide by the pentadiagonal operator
     !   [I - beta**2 (Delta t)**2 vnabla'**2 C**2 M**2]
     !   For KM>0 one works with the symmetric
@@ -753,14 +822,22 @@ DO JITER=0,I_NITERHELM
        &ZZSPDIVG,KM,KMLOC,LSIDG,KSZNISNAX,NISNAX,&
        &SIHEGBTRA,SIHEGB2TRA)
 
+!$ACDC }
+
   ELSE
 
     ! * Retrieve D'(t+dt).
     IF (LIMPF) THEN
+
+!$ACDC ABORT {
+
       ! * Solve complex pentadiagonal system.
       CALL SIMPLICO(KM,NSMAX,NFLEVG,NFLEVG,ZALPHA(KM),&
        & ZDENIM(KM),ZFPLUS(KM),ZFMINUS(KM),ZSIVP2,YDLAP%RLAPDI(0:NSMAX),&
        & ZBDT2,ZSRHS,ZZSPDIVG)
+
+!$ACDC }
+
     ELSE
       ! * Division by the diagonal operator
       !   [I - beta**2 (Delta t)**2 vnabla'**2 C**2 RSTRET**2].
@@ -777,15 +854,26 @@ DO JITER=0,I_NITERHELM
 
   ! * Provides Mbar**2 D'(t+dt).
   IF (LSIDG) THEN
+
+!$ACDC ABORT {
+
     ! Multiply ZZSPDIVG by M**2 (penta-diagonal operator).
     ! Use ZSDIVPL and ZSPDIVPL as intermediate work arrays.
 
     CALL SPCSIDG_PART2(YDGEOMETRY,KSTA,KEND,ZZSPDIVG,ZWORK,&
       &KM,KMLOC,LSIDG,KSZNISNAX,NISNAX,SCGMAP(:,1),SCGMAP(:,2),SCGMAP(:,3))
 
+!$ACDC }
+
   ELSEIF (LESIDG) THEN
+
+!$ACDC ABORT {
+
     CALL SPCSIDG_PART2(YDGEOMETRY,KSTA,KEND,ZZSPDIVG,ZWORK,&
       &KM,KMLOC,LSIDG,KSZNISNAX,NISNAX,ZPD,ZPE,ZPF)
+
+!$ACDC }
+
   ELSE
 !$OMP PARALLEL DO SCHEDULE(STATIC) PRIVATE(JSP,JLEV)
     DO JLEV=1,NFLEVG
@@ -800,6 +888,9 @@ DO JITER=0,I_NITERHELM
   !             (identical to part 2.6 of SPCSI).
 
     IF (LIMPF) THEN
+
+!$ACDC ABORT {
+
       IF (KM == 0) THEN
 !$OMP PARALLEL DO SCHEDULE(STATIC) PRIVATE(JN,JLEV,IRSP)
         DO JLEV=1,NFLEVG
@@ -849,6 +940,9 @@ DO JITER=0,I_NITERHELM
        ENDDO
 !$OMP END PARALLEL DO
       ENDIF
+
+!$ACDC }
+
     ENDIF
 
   !*       2.7  Savings.
@@ -867,6 +961,9 @@ DO JITER=0,I_NITERHELM
       ENDDO
 !$OMP END PARALLEL DO
       IF (LIMPF) THEN
+
+!$ACDC ABORT {
+
 !$OMP PARALLEL DO SCHEDULE(STATIC) PRIVATE(JLEV,JSP)
         DO JLEV=1,NFLEVG
           DO JSP=KSTA,KEND
@@ -874,6 +971,9 @@ DO JITER=0,I_NITERHELM
           ENDDO
         ENDDO
 !$OMP END PARALLEL DO
+
+!$ACDC }
+
       ENDIF
     ENDIF
 
@@ -910,6 +1010,9 @@ IF (I_NITERHELM > 0) THEN
   ENDDO
 !$OMP END PARALLEL DO
   IF (LIMPF) THEN
+
+!$ACDC ABORT {
+
 !$OMP PARALLEL DO SCHEDULE(STATIC) PRIVATE(JLEV,JSP)
     DO JLEV=1,NFLEVG
       DO JSP=KSTA,KEND
@@ -917,6 +1020,9 @@ IF (I_NITERHELM > 0) THEN
       ENDDO
     ENDDO
 !$OMP END PARALLEL DO
+
+!$ACDC }
+
   ENDIF
 
 ENDIF
@@ -965,6 +1071,9 @@ ENDDO
 
 IF (LRSIDDH) THEN
   IF (LIMPF) THEN
+
+!$ACDC ABORT {
+
 !$OMP PARALLEL DO SCHEDULE(STATIC) PRIVATE(JSP,JLEV)
     DO JLEV=1,NFLEVG
       DO JSP=KSTA,KEND
@@ -972,6 +1081,9 @@ IF (LRSIDDH) THEN
       ENDDO
     ENDDO
 !$OMP END PARALLEL DO
+
+!$ACDC }
+
   ENDIF
 !$OMP PARALLEL DO SCHEDULE(STATIC) PRIVATE(JSP,JLEV)
   DO JLEV=1,NFLEVG
