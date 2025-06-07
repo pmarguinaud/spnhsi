@@ -1,4 +1,5 @@
-FC=ifort -convert big_endian -assume byterecl -align array64byte,all -traceback \
+FC=fxtran-f90 --config $(SRC)/fxtran.conf -- \
+   ifort -convert big_endian -assume byterecl -align array64byte,all -traceback \
   -fpic -qopenmp -qopenmp-threadprivate compat -fp-model source \
   -ftz -diag-disable=remark,cpu-dispatch -qopt-report=5 -qopt-report-phase=vec \
   -g -O2 -march=core-avx2 -finline-functions -finline-limit=500 -Winline \
