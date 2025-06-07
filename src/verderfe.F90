@@ -1,5 +1,7 @@
 SUBROUTINE VERDERFE(KPROMA,KST,KEND,KFLEV,PDETA_RATIO,PDELPH,PRDELPF,PIN,POUT,PCORR,LD_CHECK_TRIDIAG)
 
+!$ACDC singleblock
+
 !**** *VERDERFE*   VERtical DIScretization -
 !                 INTerface for finite element type vertical operations:
 !                 derivative based on compatible approach  
@@ -99,13 +101,24 @@ IF (PRESENT(LD_CHECK_TRIDIAG)) LL_CHECK_TRIDIAG=LD_CHECK_TRIDIAG
 
 ILEV=KFLEV+1
 
+!$ACDC PARALLEL {
+
 ZCOR(KST:KEND)=1.0_JPRB
 IF (PRESENT(PCORR)) ZCOR(KST:KEND)=PCORR(KST:KEND)
 
+!$ACDC }
+
 !* memory transfert (can be avoided, but later!:) 
+
+!$ACDC PARALLEL {
+
 DO JLEV=1,KFLEV+1
   ZRHS(KST:KEND,JLEV)=PIN(KST:KEND,JLEV-1)
 ENDDO
+
+!$ACDC }
+
+!$ACDC PARALLEL {
 
 DO JLEV=2,KFLEV
   DO JROF=KST,KEND
@@ -123,6 +136,10 @@ DO JLEV=2,KFLEV
   ENDDO
 ENDDO  
 
+!$ACDC }
+
+!$ACDC PARALLEL {
+
 !* special treatment at vertical boundaries
 DO JROF=KST,KEND
   !* top condition
@@ -137,28 +154,45 @@ DO JROF=KST,KEND
    & ZCOR(JROF)*(PDELPH(JROF,KFLEV)/PDETA_RATIO(KFLEV))/6.0_JPRB)                        
 ENDDO
 
+!$ACDC }
+
 ! Fv remark : Maybe not be the optimal algorithm to invert a tridiagonal matrix, 
 ! when single precision calculation is at stake. BLAS/Llapack tridiag inversion
 ! routines DGTSV (double prec) or SGTSV (simple prec.) should do a better the job. 
 CALL TRIDIA2(ILEV,KPROMA,KST,KEND,ZM,ZRHS,ZSOL)
 
+!$ACDC PARALLEL {
+
 DO JLEV=0,KFLEV
   POUT(KST:KEND,JLEV)=ZSOL(KST:KEND,JLEV+1)
 ENDDO
 
+!$ACDC }
+
 IF (LL_CHECK_TRIDIAG) THEN
+
+!$ACDC PARALLEL {
+
   DO JLEV=2,KFLEV
     DO JROF=KST,KEND
       ZRES(JROF,JLEV)=ZRHS(JROF,JLEV)-( ZM(JROF,JLEV,0)*ZSOL(JROF,JLEV) &
       & + ZM(JROF,JLEV,-1)*ZSOL(JROF,JLEV-1) + ZM(JROF,JLEV,1)*ZSOL(JROF,JLEV+1))  
     ENDDO
   ENDDO
+
+!$ACDC }
+
+!$ACDC PARALLEL {
+
   DO JROF=KST,KEND
     ZRES(JROF,1)=ZRHS(JROF,1)-(ZM(JROF,1,0)*ZSOL(JROF,1) &
     & + ZM(JROF,1,1)*ZSOL(JROF,2))
     ZRES(JROF,KFLEV+1)=ZRHS(JROF,KFLEV+1)-(ZM(JROF,KFLEV+1,0)*ZSOL(JROF,KFLEV+1) &
     & + ZM(JROF,KFLEV+1,-1)*ZSOL(JROF,KFLEV))
   ENDDO
+
+!$ACDC }
+
   WRITE(NULOUT,'(''* VERDERFE: Tridiag matrix inversion error = '',E14.8)') MAXVAL(ABS(ZRES))
 ENDIF
 !     ------------------------------------------------------------------
