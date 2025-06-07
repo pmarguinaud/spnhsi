@@ -1,0 +1,9 @@
+*.o
+*.ok
+*.mod
+*.lst
+*.optrpt
+*.x
+*.smod
+*.a
+
