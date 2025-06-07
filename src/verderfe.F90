@@ -76,7 +76,7 @@ LOGICAL           ,INTENT(IN)  ,OPTIONAL :: LD_CHECK_TRIDIAG
 
 LOGICAL :: LL_CHECK_TRIDIAG
 
-INTEGER(KIND=JPIM) :: JLEV, JROF, IDIM, ILEV
+INTEGER(KIND=JPIM) :: JLEV, JROF, ILEV
 
 REAL(KIND=JPRB) :: ZCOR(KPROMA)
 REAL(KIND=JPRB) :: ZSOL(KPROMA,KFLEV+1)
@@ -88,7 +88,7 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
 !     ------------------------------------------------------------------
 
-#include "tridia.h"
+#include "tridia2.h"
 
 !     ------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('VERDERFE',0,ZHOOK_HANDLE)
@@ -98,7 +98,6 @@ LL_CHECK_TRIDIAG=.FALSE.
 IF (PRESENT(LD_CHECK_TRIDIAG)) LL_CHECK_TRIDIAG=LD_CHECK_TRIDIAG
 
 ILEV=KFLEV+1
-IDIM=KEND-KST+1
 
 ZCOR(KST:KEND)=1.0_JPRB
 IF (PRESENT(PCORR)) ZCOR(KST:KEND)=PCORR(KST:KEND)
@@ -141,7 +140,7 @@ ENDDO
 ! Fv remark : Maybe not be the optimal algorithm to invert a tridiagonal matrix, 
 ! when single precision calculation is at stake. BLAS/Llapack tridiag inversion
 ! routines DGTSV (double prec) or SGTSV (simple prec.) should do a better the job. 
-CALL TRIDIA(ILEV,IDIM,KST,KEND,2,ZM,ZRHS,ZSOL)
+CALL TRIDIA2(ILEV,KPROMA,KST,KEND,ZM,ZRHS,ZSOL)
 
 DO JLEV=0,KFLEV
   POUT(KST:KEND,JLEV)=ZSOL(KST:KEND,JLEV+1)
