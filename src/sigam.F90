@@ -1,7 +1,5 @@
 SUBROUTINE SIGAM (YDCST,YDGEOMETRY,YDDYN,KLON,KLEV,KIDIA,KFDIA,PD,PT,PSP)
 
-USE ACDC
-
 !$ACDC singleblock --openmptoparallel
 
 !**** *SIGAM_GP_OPENMP* - Solve hydrostatic operator in semi-implicit
