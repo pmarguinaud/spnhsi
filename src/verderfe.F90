@@ -90,7 +90,7 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
 !     ------------------------------------------------------------------
 
-#include "tridia2.h"
+#include "tridia2.intfb.h"
 
 !     ------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('VERDERFE',0,ZHOOK_HANDLE)
