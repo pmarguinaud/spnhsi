@@ -1,5 +1,5 @@
 SUBROUTINE SPCSIDG_PART2(YDGEOMETRY,KSTA,KEND,PSPDIVG,PHELP,&
-   & KMLOCSTA,KMLOCEND,LDSIDG,KSZNISNAX,NISNAX,ZPD,ZPE,ZPF)
+   & KMLOCSTA,KMLOCEND,LDSIDG,KSZNISNAX,NISNAX,ZPD,ZPE,ZPF,LDACC)
 
 USE GEOMETRY_MOD , ONLY : GEOMETRY
 USE PARKIND1     , ONLY : JPIM, JPRB
@@ -23,14 +23,17 @@ INTEGER(KIND=JPIM),INTENT(IN)    :: NISNAX(0:KSZNISNAX)
 REAL(KIND=JPRB)   ,INTENT(IN)    :: ZPD(1:YDGEOMETRY%YRDIM%NSPEC)
 REAL(KIND=JPRB)   ,INTENT(IN)    :: ZPE(1:YDGEOMETRY%YRDIM%NSPEC) 
 REAL(KIND=JPRB)   ,INTENT(IN)    :: ZPF(1:YDGEOMETRY%YRDIM%NSPEC)
+LOGICAL, OPTIONAL, INTENT(IN)    :: LDACC
 
 INTEGER(KIND=JPIM) :: II, IS0, ILEN,IIS,II0,JV,JN,IM
+LOGICAL            :: LLACC
 
-REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
+REAL(KIND=JPHOOK)  :: ZHOOK_HANDLE
 
 !     ------------------------------------------------------------------
 
 #include "mxptma.h"
+#include "mxptmaacc.h"
 
 !     ------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('SPCSIDG_PART2',0,ZHOOK_HANDLE)
@@ -38,40 +41,90 @@ IF (LHOOK) CALL DR_HOOK('SPCSIDG_PART2',0,ZHOOK_HANDLE)
 ASSOCIATE(YDDIM=>YDGEOMETRY%YRDIM,YDDIMV=>YDGEOMETRY%YRDIMV,YDLAP=>YDGEOMETRY%YRLAP)
 ASSOCIATE(NSMAX=>YDDIM%NSMAX, NFLEVG=>YDDIMV%NFLEVG)
 !     ------------------------------------------------------------------
- 
-IIS=2
-II0=1
-IF (.NOT. LDSIDG) THEN
-  IIS=4
-  II0=2
-ENDIF
 
-IS0=YDLAP%NSE0L(KMLOCSTA)
-IM=YDLAP%MYMS(KMLOCSTA)
-II=IIS
-ILEN=(KEND-KSTA+1)/2
-CALL MXPTMA(ILEN,NFLEVG,NFLEVG,II,IIS,ZPD(IS0+1),&
-& ZPE(IS0+1),ZPF(IS0+1),ZPE(IS0+1),ZPF(IS0+1),&
-& PSPDIVG,PHELP)
+LLACC=.FALSE.
+IF (PRESENT(LDACC)) LLACC=LDACC
 
-!!for KM=0 values with JI=2 are set to 0, as was the case in the original code
-!!(in the 49t0 version of SPCSI, array ZSPDIVG was initialized to zero, and the
-!!values with JI=2 for KM=0 were not computed)
-IF (IM==0) THEN
-  IF (LDSIDG) THEN
-    DO JV=1,NFLEVG
-      DO JN=0,2*NSMAX,2
-        PHELP(KSTA+JN+1,JV)=0.0_JPRB
-      ENDDO
-    ENDDO
-  ELSEIF (IIS==4) THEN
-    DO JV=1,NFLEVG
-      DO JN=0,NISNAX(IM)-1
-        PHELP(KSTA+4*JN+3,JV)=0.0_JPRB
-        PHELP(KSTA+4*JN+4,JV)=0.0_JPRB
-      ENDDO
-    ENDDO
+IF (LLACC) THEN
+
+  IIS=2
+  II0=1
+  IF (.NOT. LDSIDG) THEN
+    IIS=4
+    II0=2
   ENDIF
+  
+  IS0=YDGEOMETRY%YRLAP%NSE0L(KMLOCSTA)
+  IM=YDGEOMETRY%YRLAP%MYMS(KMLOCEND)
+  II=IIS
+  ILEN=(KEND-KSTA+1)/2
+  CALL MXPTMAACC(ILEN,NFLEVG,NFLEVG,II,IIS,ZPD(IS0+1),&
+  & ZPE(IS0+1),ZPF(IS0+1),ZPE(IS0+1),ZPF(IS0+1),&
+  & PSPDIVG,PHELP)
+  
+  !!for KM=0 values with JI=2 are set to 0, as was the case in the original code
+  !!(in the 49t0 version of SPCSI, array ZSPDIVG was initialized to zero, and the
+  !!values with JI=2 for KM=0 were not computed)
+  IF (IM==0) THEN
+    IF (LDSIDG) THEN
+      !$ACC PARALLEL LOOP GANG VECTOR PRIVATE(JV,JN) &
+      !$ACC& PRESENT(PHELP,YDGEOMETRY%YRDIMV%NFLEVG,YDGEOMETRY%YRDIM%NSMAX) COLLAPSE(2) DEFAULT(NONE)
+      DO JV=1,YDGEOMETRY%YRDIMV%NFLEVG
+        DO JN=0,2*YDGEOMETRY%YRDIM%NSMAX,2
+          PHELP(KSTA+JN+1,JV)=0.0_JPRB
+        ENDDO
+      ENDDO
+      !$ACC END PARALLEL 
+    ELSEIF (IIS==4) THEN
+      !$ACC PARALLEL LOOP GANG VECTOR PRIVATE(JV,JN) &
+      !$ACC& PRESENT(PHELP,YDGEOMETRY%YRDIMV%NFLEVG,NISNAX) COLLAPSE(2)
+      DO JV=1,YDGEOMETRY%YRDIMV%NFLEVG
+        DO JN=0,NISNAX(IM)-1
+          PHELP(KSTA+4*JN+3,JV)=0.0_JPRB
+          PHELP(KSTA+4*JN+4,JV)=0.0_JPRB
+        ENDDO
+      ENDDO
+      !$ACC END PARALLEL
+    ENDIF
+  ENDIF
+
+ELSE
+ 
+  IIS=2
+  II0=1
+  IF (.NOT. LDSIDG) THEN
+    IIS=4
+    II0=2
+  ENDIF
+  
+  IS0=YDLAP%NSE0L(KMLOCSTA)
+  IM=YDLAP%MYMS(KMLOCSTA)
+  II=IIS
+  ILEN=(KEND-KSTA+1)/2
+  CALL MXPTMA(ILEN,NFLEVG,NFLEVG,II,IIS,ZPD(IS0+1),&
+  & ZPE(IS0+1),ZPF(IS0+1),ZPE(IS0+1),ZPF(IS0+1),&
+  & PSPDIVG,PHELP)
+  
+  !!for KM=0 values with JI=2 are set to 0, as was the case in the original code
+  !!(in the 49t0 version of SPCSI, array ZSPDIVG was initialized to zero, and the
+  !!values with JI=2 for KM=0 were not computed)
+  IF (IM==0) THEN
+    IF (LDSIDG) THEN
+      DO JV=1,NFLEVG
+        DO JN=0,2*NSMAX,2
+          PHELP(KSTA+JN+1,JV)=0.0_JPRB
+        ENDDO
+      ENDDO
+    ELSEIF (IIS==4) THEN
+      DO JV=1,NFLEVG
+        DO JN=0,NISNAX(IM)-1
+          PHELP(KSTA+4*JN+3,JV)=0.0_JPRB
+          PHELP(KSTA+4*JN+4,JV)=0.0_JPRB
+        ENDDO
+      ENDDO
+    ENDIF
+  ENDIF
+
 ENDIF
 
 END ASSOCIATE

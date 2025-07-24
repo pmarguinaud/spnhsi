@@ -1,5 +1,5 @@
 SUBROUTINE SPCSIDG_PART1 (YDGEOMETRY, YDDYN, KSTA, KEND, PSDIVP,&
-         &PSPDIVP,KMLOCSTA,KMLOCEND,LDSIDG,KSZNISNAX,NISNAX,SIHEG,SIHEG2)
+         &PSPDIVP,KMLOCSTA,KMLOCEND,LDSIDG,KSZNISNAX,NISNAX,SIHEG,SIHEG2,LDACC)
 
 USE GEOMETRY_MOD , ONLY : GEOMETRY
 USE PARKIND1     , ONLY : JPIM, JPRB
@@ -26,18 +26,20 @@ REAL(KIND=JPRB),   INTENT(IN)    :: SIHEG(YDGEOMETRY%YRDIMV%NFLEVG*&
                                           &YDGEOMETRY%YRMP%NSPEC2VF/2,3)
 REAL(KIND=JPRB),   INTENT(IN)    :: SIHEG2(YDGEOMETRY%YRDIM%NSMAX+1,&
                                           &YDGEOMETRY%YRDIMV%NFLEVG,2:3)
+LOGICAL, OPTIONAL, INTENT(IN)    :: LDACC
 !     ------------------------------------------------------------------
 
 
-INTEGER(KIND=JPIM) :: II,JN,JV,IIS,II0
-
-INTEGER(KIND=JPIM) :: ISTA,IEND,JMLOC,IM,SIHEGSTA,SIHEGEND
+INTEGER(KIND=JPIM):: II,JN,JV,IIS,II0
+INTEGER(KIND=JPIM):: ISTA,IEND,JMLOC,IM,SIHEGSTA,SIHEGEND
+LOGICAL           :: LLACC
 
 REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 
 !     ------------------------------------------------------------------
 
 #include "mxture.h"
+#include "spcsidg_part1acc.intfb.h"
 
 !     ------------------------------------------------------------------
 
@@ -47,6 +49,17 @@ ASSOCIATE(YDDIM=>YDGEOMETRY%YRDIM,YDDIMV=>YDGEOMETRY%YRDIMV,YDLAP=>YDGEOMETRY%YR
 ASSOCIATE(NSMAX=>YDDIM%NSMAX,NFLEVG=>YDDIMV%NFLEVG,&
         &SIHEGIND=>YDDYN%SIHEGIND,MYMS=>YDLAP%MYMS,NSPSTAF=>YDMP%NSPSTAF,NPTRMF=>YDMP%NPTRMF)
 
+LLACC=.FALSE.
+IF (PRESENT(LDACC)) LLACC=LDACC
+
+IF (LLACC) THEN
+
+  CALL SPCSIDG_PART1ACC (YDGEOMETRY, YDDYN, KSTA,KEND,PSDIVP,&
+        &PSPDIVP,KMLOCSTA,KMLOCEND,LDSIDG,KSZNISNAX,NISNAX,SIHEG,SIHEG2)
+
+ELSE
+
+
   IIS=2
   II0=1
   IF (.NOT. LDSIDG) THEN
@@ -54,8 +67,8 @@ ASSOCIATE(NSMAX=>YDDIM%NSMAX,NFLEVG=>YDDIMV%NFLEVG,&
     II0=2
   ENDIF
 
-DO JMLOC=KMLOCSTA,KMLOCEND
-
+  DO JMLOC=KMLOCSTA,KMLOCEND
+  
   IM=MYMS(JMLOC)
   ISTA=NSPSTAF(IM)
   IEND=ISTA+2*(NISNAX(IM)+1)-1
@@ -88,53 +101,56 @@ DO JMLOC=KMLOCSTA,KMLOCEND
      ENDIF
 
 
-  ELSE
-
-  !               Inversion of a non-symmetric matrix.
-    II=II0
-!à voir!    II=2 sans mise à 0 après
-
-    IF (KMLOCSTA==KMLOCEND) THEN
-
-      CALL MXTURE(NISNAX(IM)+1,IEND-ISTA+1,NFLEVG,NFLEVG,II,IIS,-2,3,&
-       & SIHEG(SIHEGSTA:SIHEGEND,1),&
-       & SIHEG(SIHEGSTA:SIHEGEND,2),&
-       & SIHEG(SIHEGSTA:SIHEGEND,3),&
-       & SIHEG2(:,:,2),&
-       & SIHEG2(:,:,3),PSDIVP,PSPDIVP) 
-
-
     ELSE
-
-      CALL MXTURE(NISNAX(IM)+1,IEND-ISTA+1,NFLEVG,NFLEVG,II,IIS,-2,3,&
-       & SIHEG(SIHEGSTA:SIHEGEND,1),&
-       & SIHEG(SIHEGSTA:SIHEGEND,2),&
-       & SIHEG(SIHEGSTA:SIHEGEND,3),&
-       & SIHEG2(:,:,2),&
-       & SIHEG2(:,:,3),PSDIVP(ISTA:IEND,:),PSPDIVP(ISTA:IEND,:)) 
-
-    ENDIF 
-
-    IF (LDSIDG) THEN
-
-      !!for KM=0 values with JI=2 are set to 0, as was the case in the original code
-      !!(in the 49t0 version of SPCSI, array ZSPDIVG was initialized to zero, and the
-      !!values with JI=2 for KM=0 were not computed)
-      DO JV=1,NFLEVG
-        DO JN=0,2*NSMAX,2
-          PSPDIVP(ISTA+JN+1,JV)=0.0_JPRB
+  
+    !               Inversion of a non-symmetric matrix.
+      II=II0
+  !à voir!    II=2 sans mise à 0 après
+  
+      IF (KMLOCSTA==KMLOCEND) THEN
+  
+        CALL MXTURE(NISNAX(IM)+1,IEND-ISTA+1,NFLEVG,NFLEVG,II,IIS,-2,3,&
+         & SIHEG(SIHEGSTA:SIHEGEND,1),&
+         & SIHEG(SIHEGSTA:SIHEGEND,2),&
+         & SIHEG(SIHEGSTA:SIHEGEND,3),&
+         & SIHEG2(:,:,2),&
+         & SIHEG2(:,:,3),PSDIVP,PSPDIVP) 
+  
+  
+      ELSE
+  
+        CALL MXTURE(NISNAX(IM)+1,IEND-ISTA+1,NFLEVG,NFLEVG,II,IIS,-2,3,&
+         & SIHEG(SIHEGSTA:SIHEGEND,1),&
+         & SIHEG(SIHEGSTA:SIHEGEND,2),&
+         & SIHEG(SIHEGSTA:SIHEGEND,3),&
+         & SIHEG2(:,:,2),&
+         & SIHEG2(:,:,3),PSDIVP(ISTA:IEND,:),PSPDIVP(ISTA:IEND,:)) 
+  
+      ENDIF 
+  
+      IF (LDSIDG) THEN
+  
+        !!for KM=0 values with JI=2 are set to 0, as was the case in the original code
+        !!(in the 49t0 version of SPCSI, array ZSPDIVG was initialized to zero, and the
+        !!values with JI=2 for KM=0 were not computed)
+        DO JV=1,NFLEVG
+          DO JN=0,2*NSMAX,2
+            PSPDIVP(ISTA+JN+1,JV)=0.0_JPRB
+          ENDDO
         ENDDO
-      ENDDO
-    ELSEIF (IIS==4) THEN
-      DO JV=1,NFLEVG
-        DO JN=0,NISNAX(IM)-1
-          PSPDIVP(ISTA+4*JN+3,JV)=0.0_JPRB
-          PSPDIVP(ISTA+4*JN+4,JV)=0.0_JPRB
+      ELSEIF (IIS==4) THEN
+        DO JV=1,NFLEVG
+          DO JN=0,NISNAX(IM)-1
+            PSPDIVP(ISTA+4*JN+3,JV)=0.0_JPRB
+            PSPDIVP(ISTA+4*JN+4,JV)=0.0_JPRB
+          ENDDO
         ENDDO
-      ENDDO
+      ENDIF
     ENDIF
-  ENDIF
-ENDDO
+  ENDDO
+
+ENDIF
+
 END ASSOCIATE
 END ASSOCIATE
 
