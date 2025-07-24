@@ -729,7 +729,7 @@ DO JITER=0,I_NITERHELM
     !   after having multiplied the RHS "ZSRHS" by "RLAPIN".
     !   Use ZSDIVPL and ZSPDIVPL as intermediate work arrays.
 
-!$ACDC ABORT {
+!$ACDC HORIZONTAL {
 
     CALL SPCSIDG_PART0NH(YDGEOMETRY,YDDYN,KSTA,KEND,ZSRHS,&
      & SILAPIN,KM,IOFF)
