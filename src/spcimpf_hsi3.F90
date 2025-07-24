@@ -2,7 +2,8 @@ SUBROUTINE SPCIMPF_HSI3(&
  ! --- INPUT -----------------------------------------------------------------
  & YDGEOMETRY,YDRIP,YDDYN,KMLOCSTA,KMLOCEND,KSTA,KEND,PSPDIVG,&
  ! --- OUTPUT ----------------------------------------------------------------
- & PSPVORG)  
+ & PSPVORG, &
+ & LDACC)  
 
 !**** *SPCIMPFSOLVE* - CALL SIMPLICO FROM S-SPACE
 
@@ -59,6 +60,9 @@ INTEGER(KIND=JPIM),INTENT(IN)    :: KSTA
 INTEGER(KIND=JPIM),INTENT(IN)    :: KEND
 REAL(KIND=JPRB)   ,INTENT(IN)    :: PSPDIVG (KSTA:KEND,YDGEOMETRY%YRDIMV%NFLEVG)
 REAL(KIND=JPRB)   ,INTENT(OUT)   :: PSPVORG(KSTA:KEND,YDGEOMETRY%YRDIMV%NFLEVG)
+LOGICAL, OPTIONAL ,INTENT(IN)    :: LDACC
+
+#include "abor1.intfb.h"
 
 !     ------------------------------------------------------------------
 
@@ -84,6 +88,11 @@ ASSOCIATE(NSMAX=>YDDIM%NSMAX, NSPEC2=>YDDIM%NSPEC2, NUMP=>YDDIM%NUMP, &
  & NFLEVG=>YDDIMV%NFLEVG, &
  & RBT=>YDDYN%RBT, &
  & TDT=>YDRIP%TDT,NSPSTAF=>YDMP%NSPSTAF)
+
+IF (PRESENT (LDACC)) THEN
+  IF (LDACC) CALL ABOR1 ('SPCIMPF_HSI3: LDACC=T')
+ENDIF
+
 !     ------------------------------------------------------------------
 
 !     ------------------------------------------------------------------

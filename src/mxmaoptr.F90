@@ -68,6 +68,16 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('MXMAOPTR',0,ZHOOK_HANDLE)
 !     ------------------------------------------------------------------
 
+WRITE (*, *) __FILE__, ':', __LINE__
+WRITE (*, '(10E30.20)') PA
+PRINT *
+WRITE (*, '(10E30.20)') PB
+PRINT *
+WRITE (*, '(10E30.20)') PC
+PRINT *
+
+
+PC = 0
 
 LLACC=.FALSE.
 IF (PRESENT(LDACC)) LLACC=LDACC
@@ -97,6 +107,10 @@ ELSE
   !$OMP END PARALLEL DO
 
 ENDIF
+
+WRITE (*, '(A,":",I0," PC ",E30.20)') __FILE__, __LINE__, PC (1, 1)
+
+STOP 1
 
 !     ------------------------------------------------------------------
 
