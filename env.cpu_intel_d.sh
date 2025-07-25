@@ -10,7 +10,7 @@ module load $MPIPACKAGE        2>/dev/null
 module load gcc/9.2.0          2>/dev/null
 
 
-export PATH=/home/gmap/mrpm/marguina/fxtran-acdc/manyblockssection/bin:$PATH
+export PATH=/home/gmap/mrpm/penigaudn/fxtran-acdc/bin:$PATH
 
 ulimit -s unlimited
 

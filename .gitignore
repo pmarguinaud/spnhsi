@@ -9,3 +9,4 @@
 *.intfb.h
 Makefile
 compile.*
+env.*
