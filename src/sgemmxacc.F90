@@ -65,17 +65,14 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 IF (LHOOK) CALL DR_HOOK('SGEMMXACC',0,ZHOOK_HANDLE)
 !     ------------------------------------------------------------------
 
-
 !$ACC DATA PRESENT(PA,PB,PC)
 !$ACC HOST_DATA USE_DEVICE(PA,PB,PC)
 #if defined(PARKIND1_SINGLE)
-!!  CALL CUBLASSGEMM('N','N',KAR,KBC,KAC,ALPHA,&
-!!        &PA(1,1),KAD,PB(1,1),KBD,BETA,PC(1,1),KCA)
+
   CALL CUBLASSGEMM('N','T',KBC,KAR,KAC,ALPHA,&
         &PB(1,1),KBC,PA(1,1),KAR,BETA,PC(1,1),KBC)
 #else
-!!  CALL CUBLASDGEMM('N','N',KAR,KBC,KAC,ALPHA,&
-!!        &PA(1,1),KAD,PB(1,1),KBD,BETA,PC(1,1),KCA)
+
   CALL CUBLASDGEMM('N','T',KBC,KAR,KAC,ALPHA,&
         &PB(1,1),KBC,PA(1,1),KAR,BETA,PC(1,1),KBC)
 
@@ -149,14 +146,13 @@ REAL(KIND=JPHOOK) :: ZHOOK_HANDLE
 !     ------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('SGEMMXACC',0,ZHOOK_HANDLE)
 !     ------------------------------------------------------------------
+
 #if defined(PARKIND1_SINGLE)
-!!  CALL SGEMM('N','N',KAR,KBC,KAC,ALPHA,&
-!!        &PA(1,1),KAD,PB(1,1),KBD,BETA,PC(1,1),KCA)
+
   CALL SGEMM('N','T',KBC,KAR,KAC,ALPHA,&
         &PB(1,1),KBC,PA(1,1),KAR,BETA,PC(1,1),KBC)
 #else
-!!  CALL DGEMM('N','N',KAR,KBC,KAC,ALPHA,&
-!!        &PA(1,1),KAD,PB(1,1),KBD,BETA,PC(1,1),KCA)
+
   CALL DGEMM('N','T',KBC,KAR,KAC,ALPHA,&
         &PB(1,1),KBC,PA(1,1),KAR,BETA,PC(1,1),KBC)
 #endif

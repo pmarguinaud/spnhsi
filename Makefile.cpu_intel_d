@@ -1,4 +1,4 @@
-FC=fxtran-f90 --prefix fxtran-acdc --config $(SRC)/fxtran.conf -- \
+FC=fxtran-f90 --prefix fxtran-acdc --user-directory-out user-out --config $(SRC)/fxtran.conf -- \
   ifort -convert big_endian -assume byterecl -align array64byte,all -traceback \
   -fpic -qopenmp -qopenmp-threadprivate compat -fp-model source \
   -ftz -diag-disable=remark,cpu-dispatch -qopt-report=5 -qopt-report-phase=vec \
