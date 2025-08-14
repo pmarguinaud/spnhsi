@@ -1,6 +1,6 @@
 SUBROUTINE SIPTP (YDCST, YDGEOMETRY, YDDYN, YDDYNA, KLON, KLEV, KIDIA, KFDIA, PDH, PDV, PRNH, PT, PSP)
 
-!$ACDC singleblock --openmptoparallel
+!$ACDC singleblock 
 
 !**** *SIPTP* - Counterpart of SITNU in nonhydrostatic
 

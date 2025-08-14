@@ -1,6 +1,6 @@
 SUBROUTINE SISEVE(YDCST, YDGEOMETRY, YDDYN, YDDYNA, KLON, KLEV, KIDIA, KFDIA, PV1, PV2, LD_LSTAR, LD_SKAPI)
 
-!$ACDC singleblock --openmptoparallel
+!$ACDC singleblock 
 
 !**** *SISEVE_GP_OPENMP* - SEcond VErtical derivative operator in Semi - Implicit
 

@@ -1,6 +1,6 @@
 SUBROUTINE SISKAPI(YDCST, YDGEOMETRY, YDDYN, YDDYNA, KLON, KLEV, KIDIA, KFDIA, PIN, POUT)
 
-!$ACDC singleblock --openmptoparallel
+!$ACDC singleblock 
 
 
 !**** *SISKAPI_GP_OPENMP* - Semi-implicit scheme: compute Sstar_kap**-1 X

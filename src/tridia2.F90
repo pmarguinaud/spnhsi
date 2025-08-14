@@ -69,36 +69,22 @@ IF (LHOOK) CALL DR_HOOK('TRIDIA2',0,ZHOOK_HANDLE)
 
 ZM=PM
 
-!$ACDC PARALLEL {
-
 ZM(KST:KEND,1,-1) = 0.0_JPRB
 ZM(KST:KEND,KN,1) = 0.0_JPRB
 
-!$ACDC }
-
 !     1.2 Copy PRHS
 
-!$ACDC PARALLEL {
-
 ZRHS(KST:KEND,1:KN)=PRHS(KST:KEND,1:KN)
-
-!$ACDC }
 
 ! -----------------------------------------------------------------------------
 
 !     2.   ASCENDING LOOP.
 !          ---------------
 
-!$ACDC PARALLEL {
-
 DO JROF = KST,KEND
   PSOL(JROF,1) = -ZM(JROF,1,1)/ZM(JROF,1,0)
   ZRHS(JROF,1) =  ZRHS(JROF,1)/ZM(JROF,1,0)
 ENDDO
-
-!$ACDC }
-
-!$ACDC PARALLEL {
 
 DO J = 2,KN
   DO JROF = KST,KEND
@@ -108,14 +94,10 @@ DO J = 2,KN
   ENDDO
 ENDDO
 
-!$ACDC }
-
 ! -----------------------------------------------------------------------------
 
 !     3.   DESCENDING LOOP.
 !          ----------------
-
-!$ACDC PARALLEL {
 
 PSOL(KST:KEND,KN)=ZRHS(KST:KEND,KN)
 DO J = KN-1,1,-1
@@ -123,8 +105,6 @@ DO J = KN-1,1,-1
     PSOL(JROF,J) = ZRHS(JROF,J) + PSOL(JROF,J)*PSOL(JROF,J+1)
   ENDDO
 ENDDO
-
-!$ACDC }
 
 ! -----------------------------------------------------------------------------
 IF (LHOOK) CALL DR_HOOK('TRIDIA2',1,ZHOOK_HANDLE)
