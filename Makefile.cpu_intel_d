@@ -1,0 +1,18 @@
+FC=fxtran-f90 --prefix fxtran-acdc --user-directory-out user-out --config $(SRC)/fxtran.conf -- \
+  ifort -convert big_endian -assume byterecl -align array64byte,all -traceback \
+  -fpic -qopenmp -qopenmp-threadprivate compat -fp-model source \
+  -ftz -diag-disable=remark,cpu-dispatch -qopt-report=5 -qopt-report-phase=vec \
+  -g -O2 -march=core-avx2 -finline-functions -finline-limit=500 -Winline \
+  -qopt-prefetch=4 -fast-transcendentals -fimf-use-svml -no-fma -DBLAS
+
+BOOT=fxtran-acdc
+
+fxtran-acdc:
+	fxtran-boot --prefix fxtran-acdc --F90 ifort --CXX icpc
+
+LIBS= \
+  -mkl=sequential  \
+  -Wl,-rpath,/opt/softs/intel/oneapi/2023.2/compiler/2023.2.0/linux/compiler/lib/intel64_lin \
+  -Wl,-rpath,/home/gmap/mrpm/penigaudn/spnhsi/libtricK  \
+  -Wl,-rpath,/opt/softs/intel/oneapi/2023.2/mkl/2023.2.0/lib/intel64/
+

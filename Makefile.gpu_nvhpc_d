@@ -11,8 +11,7 @@ FC=fxtran-f90 \
   $(FCFLAGS) 
 
 
-boot: fxtran-acdc
-	\mkdir -p boot
+BOOT=fxtran-acdc
 
 fxtran-acdc:
 	fxtran-boot --prefix fxtran-acdc --F90 "pgf90 $(FCFLAGS)" -CXX "pgc++ -acc=gpu -gpu=cc70,cc80 -cuda"
